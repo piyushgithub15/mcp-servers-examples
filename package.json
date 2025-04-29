@@ -4,7 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc && shx chmod +x dist/*.js",
+    "prepare": "npm run build",
+    "watch": "tsc --watch",
+    "start": "npm run build && node dist/index.js",
+    "start:sse": "node dist/sse.js"
   },
   "keywords": [],
   "author": "",
@@ -15,6 +19,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.10.2",
+    "@types/node-fetch": "^2.6.12",
     "express": "^5.1.0"
   }
 }

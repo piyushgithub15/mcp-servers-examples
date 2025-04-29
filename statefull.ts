@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js"
-
+import { z } from "zod";
 
 
 const app = express();
@@ -19,10 +19,8 @@ app.post('/mcp', async (req, res) => {
   let transport: StreamableHTTPServerTransport;
 
   if (sessionId && transports[sessionId]) {
-    // Reuse existing transport
     transport = transports[sessionId];
   } else if (!sessionId && isInitializeRequest(req.body)) {
-    // New initialization request
     transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: () => randomUUID(),
       onsessioninitialized: (sessionId) => {
@@ -30,8 +28,6 @@ app.post('/mcp', async (req, res) => {
         transports[sessionId] = transport;
       }
     });
-
-    // Clean up transport when closed
     transport.onclose = () => {
       if (transport.sessionId) {
         delete transports[transport.sessionId];
@@ -41,10 +37,13 @@ app.post('/mcp', async (req, res) => {
       name: "example-server",
       version: "1.0.0"
     });
-
-    // ... set up server resources, tools, and prompts ...
-
-    // Connect to the MCP server
+    server.tool(
+      "echo",
+      { message: z.string() },
+      async ({ message }) => ({
+        content: [{ type: "text", text: `Tool echo: ${message}` }]
+      })
+    );
     await server.connect(transport);
   } else {
     // Invalid request
